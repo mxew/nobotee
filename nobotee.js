@@ -11,7 +11,6 @@ if (typeof(nobotee) == "undefined") {
 		media: null,
 		dj: null,
 		commands: {},
-		users: null,
 		theme: null,
 		skiptime:false,
 		defaults:{
@@ -24,7 +23,7 @@ if (typeof(nobotee) == "undefined") {
 	};
 }
 
-nobotee.version = "0.01.2";
+nobotee.version = "0.01.3";
 
 // Redefine all nobotee functions, overwritting any code on reload..
 nobotee.start = function() {
@@ -110,7 +109,7 @@ nobotee.scr ={
 	},
 	gen_list: function(){
 		//TODO: automate this
-		var the_list = "public commands<br/>------<br/>*help<br/>*limit<br/>*theme<br/>*suggest [topic idea]<br/>*songlink<br/>(plus gdoc commands)<br/>------------<br/>bouncer+ commands<br/>------<br/>*togglelimit<br/>*toggleautovote<br/>*settheme<br/>*notheme<br/>*gdoc";
+		var the_list = "public commands<br/>------<br/>*help<br/>*limit<br/>*theme<br/>*idle [username]<br/>*suggest [topic idea]<br/>*songlink<br/>(plus gdoc commands)<br/>------------<br/>bouncer+ commands<br/>------<br/>*togglelimit<br/>*toggleautovote<br/>*settheme<br/>*notheme<br/>*gdoc";
 		$( "#nbscr" ).html("<li class='nb_nt'>"+the_list+"</li>");
 	},
 	song_length: function(){
@@ -183,7 +182,6 @@ nobotee.api = {
 	init:function() {
 		console.log("nobotee setting up event listeners..");
 		nobotee.api.populate_media();
-		nobotee.api.populate_users();
 		nobotee.commands = nobotee.api.get_commands();
 		API.on(API.CHAT, nobotee.api.newchat);
 		API.on(API.DJ_ADVANCE, nobotee.api.newsong);
@@ -198,10 +196,7 @@ nobotee.api = {
 		var dj1 = API.getDJ();
 		nobotee.media = media1;
 		nobotee.dj = dj1;
-	},
-	populate_users: function(){
-		var users1 = API.getAudience();
-		nobotee.users = users1;
+		nobotee.timer.entered = Date.now();
 	},
 	woot: function(){
 		$("#woot").click();
@@ -211,6 +206,7 @@ nobotee.api = {
 		var id = data.fromID;
 		var msg = data.message;
 		var lan = data.language;
+		nobotee.timer.justSaw(id);
 		var matches = data.message.match(/^(?:[!*#\/])(\w+)\s*(.*)/);
 		if (matches && nobotee.defaults.cmmds) {
 			var command = matches[1];
@@ -227,6 +223,12 @@ nobotee.api = {
 				}
 			} else if (command == "songlink"){
 				nobotee.api.song_link(name);
+			} else if (command == "idle"){
+				if (args){
+					nobotee.timer.idleCheck(args);
+				} else {
+					nobotee.timer.djCheck();
+				}
 			} else if ((command == "suggest") && (args)){
 				if (!nobotee.themevote.active){
 					nobotee.themevote.go(args,name);
@@ -318,22 +320,22 @@ nobotee.api = {
 		}
 	},
 	newuser: function(data){
-		nobotee.api.populate_users();
+		nobotee.timer.justSaw(data.id);
 	},
 	newexit: function(data){
-		nobotee.api.populate_users();
+		//
 	},
 	newvote: function(data){
-		//
+		nobotee.timer.justSaw(data.user.id);
 	},
 	newheart: function(data){
-		//
+		nobotee.timer.justSaw(data.user.id);
 	},
 	get_commands: function(){
 		var commands = {};
         $.ajax({
             dataType: "jsonp",
-            url: "//spreadsheets.google.com/feeds/list/1gu2gsY690NYpd9q5ewX9HO21HVacgukME-H9tPJX-WQ/od6/public/values?alt=json-in-script", 
+            url: "https://spreadsheets.google.com/feeds/list/1gu2gsY690NYpd9q5ewX9HO21HVacgukME-H9tPJX-WQ/od6/public/values?alt=json-in-script", 
             success:  function (data){
                 for (var command in data.feed.entry){
                     commands[data.feed.entry[command].gsx$command.$t] = data.feed.entry[command].gsx$response.$t;
@@ -359,8 +361,69 @@ nobotee.api = {
 	}
 };
 
+nobotee.timer = {
+	entered: null,
+	lastSeen: {},
+	getTime : function (userId) {
+ 		var last = nobotee.timer.lastSeen[userId];
+  		var age_ms = Date.now() - last;
+  		var age_s = Math.floor(age_ms / 1000);
+  		return age_s;
+	},
+	defaultTime: function (){
+		var last = nobotee.timer.entered;
+		var age_ms = Date.now() - last;
+  		var age_s = Math.floor(age_ms / 1000);
+  		return age_s;
+	},
+	justSaw : function (uid) {
+  		return nobotee.timer.lastSeen[uid] = Date.now();
+	},
+	idleCheck: function(username){
+		var id = nobotee.getid(username);
+		if (id){
+			if (nobotee.timer.lastSeen[id]){
+				var scnds = nobotee.timer.getTime(id);
+				var aprox = "";
+			} else {
+				var scnds = nobotee.timer.defaultTime();
+				var aprox = "> ";
+			}
+			var final_time = nobotee.secondsToTime(scnds);
+			nobotee.talk(username+": "+aprox+""+final_time);
+		} else {
+			nobotee.talk("that user does not appear to be here");
+		}
+	},
+	djCheck: function(){
+		var id = nobotee.dj.id;
+		if (nobotee.timer.lastSeen[id]){
+			var scnds = nobotee.timer.getTime(id);
+			var aprox = "";
+		} else {
+			var scnds = nobotee.timer.defaultTime();
+			var aprox = "> ";
+		}
+
+		var final_time = nobotee.secondsToTime(scnds);
+		nobotee.talk(nobotee.dj.username+": "+aprox+""+final_time);
+	}
+};
+
 nobotee.talk= function(txt){
 	API.sendChat(txt);
+};
+
+nobotee.getid = function(username){
+		var i;
+		var users = API.getUsers();
+		var id = null;
+		for (i = 0; i < users.length; ++i) {
+    		if (username == users[i].username){
+    			id = users[i].id;
+    		}
+		}
+		return id;
 };
 
 nobotee.atmessage = function (username) {
