@@ -8,6 +8,7 @@ written specifically for plug.dj/beats-2-45
 
 if (typeof(nobotee) == "undefined") {
 	var nobotee = {
+		firetrucks: {},
 		media: null,
 		dj: null,
 		commands: {},
@@ -23,7 +24,7 @@ if (typeof(nobotee) == "undefined") {
 	};
 }
 
-nobotee.version = "0.01.3";
+nobotee.version = "0.01.4";
 
 // Redefine all nobotee functions, overwritting any code on reload..
 nobotee.start = function() {
@@ -109,7 +110,7 @@ nobotee.scr ={
 	},
 	gen_list: function(){
 		//TODO: automate this
-		var the_list = "public commands<br/>------<br/>*help<br/>*limit<br/>*theme<br/>*idle [username]<br/>*suggest [topic idea]<br/>*songlink<br/>(plus gdoc commands)<br/>------------<br/>bouncer+ commands<br/>------<br/>*togglelimit<br/>*toggleautovote<br/>*settheme<br/>*notheme<br/>*gdoc";
+		var the_list = "public commands<br/>------<br/>*help<br/>*limit<br/>*theme<br/>*idle [username]<br/>*lastchatted [username]<br/>*points [username]<br/>*joindates<br/>*suggest [topic idea]<br/>*songlink<br/>(plus gdoc commands)<br/>------------<br/>bouncer+ commands<br/>------<br/>*togglelimit<br/>*toggleautovote<br/>*settheme<br/>*notheme<br/>*gdoc";
 		$( "#nbscr" ).html("<li class='nb_nt'>"+the_list+"</li>");
 	},
 	song_length: function(){
@@ -206,7 +207,7 @@ nobotee.api = {
 		var id = data.fromID;
 		var msg = data.message;
 		var lan = data.language;
-		nobotee.timer.justSaw(id);
+		nobotee.timer.justSaw(id,true);
 		var matches = data.message.match(/^(?:[!*#\/])(\w+)\s*(.*)/);
 		if (matches && nobotee.defaults.cmmds) {
 			var command = matches[1];
@@ -215,7 +216,14 @@ nobotee.api = {
 				nobotee.talk(nobotee.commands[command]);
 			} else if (command == "help"){
 				nobotee.talk("help");
-			} else if (command == "theme"){
+			} else if (command == "points"){
+				if (args){
+					var response = nobotee.api.pointslook(args);
+				} else {
+					var response = nobotee.api.pointslook(name);
+				}
+				nobotee.talk(response);
+			}else if (command == "theme"){
 				if (nobotee.theme){
 					nobotee.talk("current theme is '"+nobotee.theme+"'");
 				} else {
@@ -223,11 +231,20 @@ nobotee.api = {
 				}
 			} else if (command == "songlink"){
 				nobotee.api.song_link(name);
+			} else if (command == "joindates"){
+				var oldest = nobotee.api.oldest_account();
+				nobotee.talk(oldest.guy.username+" is the oldest with a joindate of "+oldest.date);
 			} else if (command == "idle"){
 				if (args){
 					nobotee.timer.idleCheck(args);
 				} else {
 					nobotee.timer.djCheck();
+				}
+			} else if (command == "lastchatted"){
+				if (args){
+					nobotee.timer.idleCheck(args,true);
+				} else {
+					nobotee.timer.djCheck(true);
 				}
 			} else if ((command == "suggest") && (args)){
 				if (!nobotee.themevote.active){
@@ -284,12 +301,15 @@ nobotee.api = {
 		//end of commands
 		} else if (msg == "1" && nobotee.themevote.active){
 			nobotee.themevote.params.votes[id] = 1;
+		}  else if ((msg == ":fire:") && (nobotee.defaults.cmmds)){
+			nobotee.api.firetruck(id);
 		}
 
 	},
 	newsong: function(data){
 		nobotee.media = data.media;
 		nobotee.dj = data.dj;
+		nobotee.firetrucks = {};
 		nobotee.skiptime = false;
 		if (nobotee.defaults.autovt){
 			nobotee.api.woot();
@@ -358,14 +378,65 @@ nobotee.api = {
        		});
 		}
 
+	},
+	firetruck: function(id){
+		console.log("fired");
+		if (!nobotee.firetrucks[id]){
+			nobotee.firetrucks[id] = 1;
+		}
+		var thelength = nobotee.themevote.size(nobotee.firetrucks);
+		var trucks = "";
+		var i;
+		for (i = 0; i < thelength; ++i) {
+    		trucks += ":fire_engine: ";
+		}
+		nobotee.talk(trucks);
+	},
+	oldest_account: function(){
+		var users = API.getUsers();
+		var oldest_guy = users[0];
+		var oldest_time = Date.parse(oldest_guy.dateJoined);
+		var i;
+		for (i = 0; i < users.length; ++i) {
+			var thetime = Date.parse(users[i].dateJoined);
+    		if (thetime < oldest_time){
+    			oldest_time = thetime;
+    			oldest_guy = users[i];
+    		}
+		}
+		var d = new Date(oldest_guy.dateJoined);
+		var formatted_joindate = nobotee.formatdate(d, true);
+		var obj = {
+			guy: oldest_guy,
+			date: formatted_joindate
+		};
+		return obj;
+	},
+	pointslook: function(username){
+		var usr = nobotee.getobj(username);
+		if (usr){
+			var total_points = usr.listenerPoints + usr.curatorPoints + usr.djPoints;
+			var dj_per = Math.round((usr.djPoints / total_points) * 100);
+			var lis_per = Math.round((usr.listenerPoints / total_points) * 100);
+			var cur_per = Math.round((usr.curatorPoints / total_points) * 100);
+			var str = username+": "+dj_per+"% from djing, "+lis_per+"% from voting, and "+cur_per+"% from snags";
+		} else {
+			var str = "that user does not appear to be here";
+		}	
+		return str;
 	}
 };
 
 nobotee.timer = {
 	entered: null,
 	lastSeen: {},
-	getTime : function (userId) {
- 		var last = nobotee.timer.lastSeen[userId];
+	lastChatted: {},
+	getTime : function (userId,chat) {
+		if (chat){
+			var last = nobotee.timer.lastChatted[userId];
+		} else {
+			var last = nobotee.timer.lastSeen[userId];
+		}
   		var age_ms = Date.now() - last;
   		var age_s = Math.floor(age_ms / 1000);
   		return age_s;
@@ -376,18 +447,30 @@ nobotee.timer = {
   		var age_s = Math.floor(age_ms / 1000);
   		return age_s;
 	},
-	justSaw : function (uid) {
-  		return nobotee.timer.lastSeen[uid] = Date.now();
+	justSaw : function (uid,chat) {
+		var rightNow = Date.now();
+  		nobotee.timer.lastSeen[uid] = rightNow;
+  		if (chat) nobotee.timer.lastChatted[uid] = rightNow;
 	},
-	idleCheck: function(username){
+	idleCheck: function(username,chat){
 		var id = nobotee.getid(username);
 		if (id){
-			if (nobotee.timer.lastSeen[id]){
-				var scnds = nobotee.timer.getTime(id);
-				var aprox = "";
+			if (chat){
+				if (nobotee.timer.lastChatted[id]){
+					var scnds = nobotee.timer.getTime(id,true);
+					var aprox = "";
+				} else {
+					var scnds = nobotee.timer.defaultTime();
+					var aprox = "> ";
+				}
 			} else {
-				var scnds = nobotee.timer.defaultTime();
-				var aprox = "> ";
+				if (nobotee.timer.lastSeen[id]){
+					var scnds = nobotee.timer.getTime(id);
+					var aprox = "";
+				} else {
+					var scnds = nobotee.timer.defaultTime();
+					var aprox = "> ";
+				}
 			}
 			var final_time = nobotee.secondsToTime(scnds);
 			nobotee.talk(username+": "+aprox+""+final_time);
@@ -395,19 +478,28 @@ nobotee.timer = {
 			nobotee.talk("that user does not appear to be here");
 		}
 	},
-	djCheck: function(){
+	djCheck: function(chat){
 		var id = nobotee.dj.id;
-		if (nobotee.timer.lastSeen[id]){
-			var scnds = nobotee.timer.getTime(id);
-			var aprox = "";
+		if(chat){
+			if (nobotee.timer.lastChatted[id]){
+				var scnds = nobotee.timer.getTime(id,true);
+				var aprox = "";
+			} else {
+				var scnds = nobotee.timer.defaultTime();
+				var aprox = "> ";
+			}
 		} else {
-			var scnds = nobotee.timer.defaultTime();
-			var aprox = "> ";
+			if (nobotee.timer.lastSeen[id]){
+				var scnds = nobotee.timer.getTime(id);
+				var aprox = "";
+			} else {
+				var scnds = nobotee.timer.defaultTime();
+				var aprox = "> ";
+			}
 		}
-
 		var final_time = nobotee.secondsToTime(scnds);
 		nobotee.talk(nobotee.dj.username+": "+aprox+""+final_time);
-	}
+	},
 };
 
 nobotee.talk= function(txt){
@@ -421,9 +513,23 @@ nobotee.getid = function(username){
 		for (i = 0; i < users.length; ++i) {
     		if (username == users[i].username){
     			id = users[i].id;
+    			break;
     		}
 		}
 		return id;
+};
+
+nobotee.getobj = function(username){
+		var i;
+		var users = API.getUsers();
+		var obj = null;
+		for (i = 0; i < users.length; ++i) {
+    		if (username == users[i].username){
+    			obj = users[i];
+    			break;
+    		}
+		}
+		return obj;
 };
 
 nobotee.atmessage = function (username) {
@@ -445,6 +551,21 @@ nobotee.secondsToTime = function(secs) {
 	var seconds = Math.ceil(divisor_for_seconds);
 	return minutes + "m " + seconds+"secs";
 };
+
+nobotee.formatdate = function(d,include_time){
+	var offset1 = d.getTimezoneOffset() / 60;
+	var offset = - offset1;
+	var month = d.getMonth() + 1;
+	var day = d.getDate();
+	var year = d.getFullYear();
+	var hours = d.getHours() + 1;
+	var minutes = d.getMinutes() + 1;
+	if (minutes <= 9) minutes = "0" + minutes;
+	if (hours >= 13){ var ampm = "pm"; var newhours = hours - 12; } else { var ampm = "am"; var newhours = hours;}
+	var str = month+"/"+day+"/"+year;
+	if (include_time) str += " @ "+newhours+":"+minutes+""+ampm+" (UTC"+offset+")"
+	return str;
+}
 
 nobotee.themevote  = {
 	active: false,
