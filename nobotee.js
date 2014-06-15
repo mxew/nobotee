@@ -223,7 +223,7 @@ nobotee.api = {
 					var response = nobotee.api.pointslook(name);
 				}
 				nobotee.talk(response);
-			}else if (command == "theme"){
+			} else if (command == "theme"){
 				if (nobotee.theme){
 					nobotee.talk("current theme is '"+nobotee.theme+"'");
 				} else {
@@ -301,7 +301,7 @@ nobotee.api = {
 		//end of commands
 		} else if (msg == "1" && nobotee.themevote.active){
 			nobotee.themevote.params.votes[id] = 1;
-		}  else if ((msg == ":fire:") && (nobotee.defaults.cmmds)){
+		} else if ((msg == ":fire:") && (nobotee.defaults.cmmds)){
 			nobotee.api.firetruck(id);
 		}
 
@@ -499,7 +499,7 @@ nobotee.timer = {
 		}
 		var final_time = nobotee.secondsToTime(scnds);
 		nobotee.talk(nobotee.dj.username+": "+aprox+""+final_time);
-	},
+	}
 };
 
 nobotee.talk= function(txt){
