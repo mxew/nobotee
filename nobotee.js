@@ -20,11 +20,24 @@ if (typeof(nobotee) == "undefined") {
 			mode:"notifications",
 			cmmds:true
 		},
+		advanced_settings:{
+			greetings: false,
+			customgreeting: null,
+			themeingreeting: false,
+			allowthemevotes:true,
+			new_song_msg: false,
+			tt_mode: false,
+			tt_mode_queue: false,
+			djlimit: null,
+			autoafk: false,
+			afklimit: 30,
+			custom_gdoc: "1gu2gsY690NYpd9q5ewX9HO21HVacgukME-H9tPJX-WQ"
+		},
 		started:false
 	};
 }
 
-nobotee.version = "0.01.4";
+nobotee.version = "0.01.5";
 
 // Redefine all nobotee functions, overwritting any code on reload..
 nobotee.start = function() {
@@ -50,7 +63,7 @@ nobotee.ui = {
 		 }
 	},
 	build: function(){
-		$( "body" ).prepend("<style>ul.nbscr{margin:0; padding:0; list-style-type:none;} .nb_on{color:green;} .nb_off{color:red;} .nb_btnrow{border-top:1px dotted #ccc; margin-top:8px; padding-top:8px;} .nb_btnrow:first-child{padding-top:0;border-top:none;} #nbsc_mode{color:#888;} li.nb_nt{padding:2px;} li.nb_nt:nth-child(even){background-color:#000073;} #nb_buttons{padding-left:2px; padding-right:2px;} #nb_screen{height:70px; border-bottom:1px solid #00f; background-color:#00f; color:#eee; overflow-y:scroll;} #nobotee h2{padding-left:2px;font-size:12px; color:#fff; display:block; background-color:#444; margin:0; font-weight:700;} #nobotee{z-index:9; font-family:helvetica,arial,sans-serif; left:2px; font-size:12px;height:232px; position:absolute; color:#000; top:55px; width:188px; background-color:#fff;}</style><div id='nobotee'></div>");
+		$( "body" ).prepend("<style>.cutelink1{text-decoration:underline; color:#888;} .cutelink1:hover{color:#000;} .newsetting{padding:5px 0 5px 0;} #customgdocbox{width:350px;} #customgreetingbox{width:350px;} .newsetting2{padding:10px 0 10px 0;} .nbtset_divide{display:block; width:100%; border-bottom:1px solid #ccc; margin-top:15px; margin-bottom:15px;} #thesettingsnbt{display:none;} .dogcat{overflow-y:scroll; height:300px;background-color:#fff; padding:15px 5px 10px 5px;} .nbtclosethat{float:right; color:#fff; text-decoration:none; font-weight:400;} .nbtclosethat:hover{color:green;} .catdog{padding:10px 5px 10px 5px; background-color:#333; color:#fff; font-size:14px; font-weight:bold;} div.nbtsettings{font-family:helvetica,arial,sans-serif;-webkit-text-rendering: optimizeLegibility; display:block; position:absolute; top:50%; left:50%; font-size:12px; width:500px; padding: 0; color:#000; -webkit-transform: translate(-50%, -50%); -moz-transform: translate(-50%, -50%); -ms-transform: translate(-50%, -50%); -o-transform: translate(-50%, -50%);transform: translate(-50%, -50%);}ul.nbscr{margin:0; padding:0; list-style-type:none;} .nb_on{color:green;} .nb_off{color:red;} .nb_btnrow{border-top:1px dotted #ccc; margin-top:8px; padding-top:8px;} .nb_btnrow:first-child{padding-top:0;border-top:none;} #nbsc_mode{color:#888;} li.nb_nt{padding:2px;} li.nb_nt:nth-child(even){background-color:#000073;} #nb_buttons{padding-left:2px; padding-right:2px;} #nb_screen{height:70px; border-bottom:1px solid #00f; background-color:#00f; color:#eee; overflow-y:scroll;} #nobotee h2{padding-left:2px;font-size:12px; color:#fff; display:block; background-color:#444; margin:0; font-weight:700;} #nobotee{z-index:9; font-family:helvetica,arial,sans-serif; left:2px; font-size:12px;height:232px; position:absolute; color:#000; top:55px; width:188px; background-color:#fff;}</style><div id='nobotee'></div>");
 		$( "#nobotee" ).append("<div id='nb_contents'><h2>nobotee "+nobotee.version+"</h2></div>");
 		$( "#nb_contents" ).append("<div id='nb_screen'><ul class='nbscr' id='nbscr'></ul></div>");
 	
@@ -68,8 +81,80 @@ nobotee.ui = {
 			var c_mnds = "<span class='nb_off' id='nbsc_cmmds'>off</span>";
 		}
 
-		$( "#nb_contents" ).append("<div id='nb_buttons'><div class='nb_btnrow'><button onclick='nobotee.buttons.clear_sc()'>clear</button> &nbsp; <button onclick='nobotee.buttons.toggle_mode()'>mode</button> <span id='nbsc_mode'>"+nobotee.defaults.mode+"</span></div><div class='nb_btnrow'><button onclick='nobotee.buttons.toggle_time_lmt()'>time lmt</button> "+t_limit+" &nbsp; <button onclick='nobotee.buttons.toggle_auto_vote()'>auto vote</button> "+a_vote+"</div> <div class='nb_btnrow'><button onclick='nobotee.buttons.toggle_cmmnds()'>chat commands</button> "+c_mnds+"</div></div>");
+		$( "#nb_contents" ).append("<div id='nb_buttons'><div class='nb_btnrow'><button onclick='nobotee.buttons.clear_sc()'>clear</button> &nbsp; <button onclick='nobotee.buttons.toggle_mode()'>mode</button> <span id='nbsc_mode'>"
+			+nobotee.defaults.mode+"</span></div><div class='nb_btnrow'><button onclick='nobotee.buttons.toggle_time_lmt()'>time lmt</button> "
+			+t_limit+" &nbsp; <button onclick='nobotee.buttons.toggle_auto_vote()'>auto vote</button> "
+			+a_vote+"</div> <div class='nb_btnrow'><button onclick='nobotee.buttons.toggle_cmmnds()'>chat commands</button> "
+			+c_mnds+"</div><div class='nb_btnrow'><a class='cutelink1' onclick='nobotee.buttons.open_settings()'>advanced settings</a></div></div>");
 		console.log("nobotee ui built");
+		$( "body" ).append("<div id='thesettingsnbt'><div style='width:100%; height:100%;' id='dialog-container'><div class='modal-background'></div><div class='nbtsettings'><div class='catdog'>nobotee settings<a onclick='nobotee.buttons.close_settings()' class='nbtclosethat'>[close + save]</a><div style='clear:both;'></div></div><div class='dogcat'>fetching the settings...</div></div></div></div>");
+	},
+	loadsettings: function(){
+		$( ".dogcat" ).html("<div class='newsetting'><input type='checkbox' id='greetonentry'> greet new user on entry</div><div class='newsetting'><input type='checkbox' id='greettheme'> include theme in greeting (if there is one)</div><div class='newsetting2'>custom greeting: <input name='customgreeting' placeholder='(will automatically be prefixed with @username)' id='customgreetingbox' type='text'/></div>");
+		$( ".dogcat" ).append("<div class='nbtset_divide'></div><div class='newsetting'><input type='checkbox' id='announcenewsong'> announce new song playing in chat</div>");
+		$( ".dogcat" ).append("<div class='nbtset_divide'></div><div class='newsetting'><input type='checkbox' id='allowthemevotes'> allow users to vote for theme using *suggest</div>");
+		$( ".dogcat" ).append("<div class='nbtset_divide'></div><div class='newsetting2'>gdoc id: <input name='customgdoc' id='customgdocbox' placeholder='leave blank to reset to default id' type='text'/></div>");
+
+		if (nobotee.advanced_settings.greetings){
+			$('#greetonentry').prop('checked', true);
+		}
+		if (nobotee.advanced_settings.customgreeting){
+			$( "#customgreetingbox" ).val(nobotee.advanced_settings.customgreeting);
+		}
+		if (nobotee.advanced_settings.custom_gdoc){
+			$( "#customgdocbox" ).val(nobotee.advanced_settings.custom_gdoc);
+		}
+		if (nobotee.advanced_settings.themeingreeting){
+			$('#greettheme').prop('checked', true);
+		}
+		if(nobotee.advanced_settings.new_song_msg){
+			$('#announcenewsong').prop('checked', true);
+		}
+		if(nobotee.advanced_settings.allowthemevotes){
+			$('#allowthemevotes').prop('checked', true);
+		}
+
+	},
+	readsettings: function(){
+		if ($('#greetonentry').prop('checked')){
+			nobotee.advanced_settings.greetings = true;
+		} else {
+			nobotee.advanced_settings.greetings = false;
+		}
+
+		if ($('#greettheme').prop('checked')){
+			nobotee.advanced_settings.themeingreeting = true;
+		} else {
+			nobotee.advanced_settings.themeingreeting = false;
+		}
+
+		if ($('#announcenewsong').prop('checked')){
+			nobotee.advanced_settings.new_song_msg = true;
+		} else {
+			nobotee.advanced_settings.new_song_msg = false;
+		}
+
+		if ($('#allowthemevotes').prop('checked')){
+			nobotee.advanced_settings.allowthemevotes = true;
+		} else {
+			nobotee.advanced_settings.allowthemevotes = false;
+		}
+
+		if ($( "#customgreetingbox" ).val() == ""){
+			nobotee.advanced_settings.customgreeting = null;
+		} else {
+			nobotee.advanced_settings.customgreeting = $( "#customgreetingbox" ).val();
+		}
+
+		if ($( "#customgdocbox" ).val() == ""){
+			nobotee.advanced_settings.custom_gdoc = "1gu2gsY690NYpd9q5ewX9HO21HVacgukME-H9tPJX-WQ";
+		} else {
+			nobotee.advanced_settings.custom_gdoc = $( "#customgdocbox" ).val();
+		}
+
+		nobotee.storage.save();
+		nobotee.scr.updt("advanced settings have been saved.",1);
+
 	},
 	destroy: function(){
 		$("#nobotee").remove();
@@ -175,6 +260,14 @@ nobotee.buttons ={
 		$( "#nbsc_cmmds" ).replaceWith( "<span class='nb_on' id='nbsc_cmmds'>on</span>" );
 		}
 		nobotee.storage.save();
+	},
+	close_settings: function(){
+		nobotee.ui.readsettings();
+		$( "#thesettingsnbt" ).hide();
+	},
+	open_settings: function(){
+		$( "#thesettingsnbt" ).show();
+		nobotee.ui.loadsettings();
 	}
 };
 
@@ -183,7 +276,7 @@ nobotee.api = {
 	init:function() {
 		console.log("nobotee setting up event listeners..");
 		nobotee.api.populate_media();
-		nobotee.commands = nobotee.api.get_commands();
+		if (nobotee.advanced_settings.custom_gdoc) nobotee.commands = nobotee.api.get_commands();
 		API.on(API.CHAT, nobotee.api.newchat);
 		API.on(API.DJ_ADVANCE, nobotee.api.newsong);
 		API.on(API.USER_JOIN, nobotee.api.newuser);
@@ -246,7 +339,7 @@ nobotee.api = {
 				} else {
 					nobotee.timer.djCheck(true);
 				}
-			} else if ((command == "suggest") && (args)){
+			} else if ((command == "suggest") && (args) && (nobotee.advanced_settings.allowthemevotes)){
 				if (!nobotee.themevote.active){
 					nobotee.themevote.go(args,name);
 				} else {
@@ -293,8 +386,13 @@ nobotee.api = {
 					nobotee.talk("there is no theme");
 					nobotee.storage.save();
 				} else if (command == "gdoc"){
-					nobotee.commands = nobotee.api.get_commands();
-					nobotee.talk("google doc commands have been reloaded.");
+					if (nobotee.advanced_settings.custom_gdoc){
+						nobotee.commands = nobotee.api.get_commands();
+						nobotee.talk("google doc commands have been reloaded.");
+					} else {
+						nobotee.talk("no gdoc specified");
+					}
+
 				}
 			} 
 
@@ -313,6 +411,9 @@ nobotee.api = {
 		nobotee.skiptime = false;
 		if (nobotee.defaults.autovt){
 			nobotee.api.woot();
+		}
+		if (nobotee.advanced_settings.new_song_msg){
+			nobotee.talk("/me :cd: "+nobotee.dj.username+" started playing '"+nobotee.media.title+"' by "+nobotee.media.author);
 		}
 		if (nobotee.defaults.mode == "song_length") nobotee.scr.song_length();
 		if (nobotee.defaults.time_lmt){
@@ -341,6 +442,20 @@ nobotee.api = {
 	},
 	newuser: function(data){
 		nobotee.timer.justSaw(data.id);
+		if (nobotee.advanced_settings.greetings){
+			var response = nobotee.atmessage(data.username)
+			if (nobotee.advanced_settings.customgreeting){
+				response += " "+nobotee.advanced_settings.customgreeting;
+			} else {
+				response += " hello.";
+			}
+			if (nobotee.advanced_settings.themeingreeting){
+				response += " Current theme is "+nobotee.theme;
+			}
+			setTimeout(function() {
+					nobotee.talk(response);
+				}, 2 * 1000);
+		}
 	},
 	newexit: function(data){
 		//
@@ -355,7 +470,7 @@ nobotee.api = {
 		var commands = {};
         $.ajax({
             dataType: "jsonp",
-            url: "https://spreadsheets.google.com/feeds/list/1gu2gsY690NYpd9q5ewX9HO21HVacgukME-H9tPJX-WQ/od6/public/values?alt=json-in-script", 
+            url: "https://spreadsheets.google.com/feeds/list/"+nobotee.advanced_settings.custom_gdoc+"/od6/public/values?alt=json-in-script", 
             success:  function (data){
                 for (var command in data.feed.entry){
                     commands[data.feed.entry[command].gsx$command.$t] = data.feed.entry[command].gsx$response.$t;
@@ -620,7 +735,8 @@ nobotee.storage = {
 	save: function(){
 		var save_file = {
 			defaults: nobotee.defaults,
-			theme: nobotee.theme
+			theme: nobotee.theme,
+			advanced_settings: nobotee.advanced_settings
 		};
 		var preferences = JSON.stringify(save_file);
 		localStorage["nobotee"] = preferences;
@@ -633,6 +749,7 @@ nobotee.storage = {
  		 var preferences = JSON.parse(favorite);
  		 nobotee.defaults = preferences.defaults;
  		 nobotee.theme = preferences.theme;
+ 		 if (preferences.advanced_settings) nobotee.advanced_settings = preferences.advanced_settings;
 	}
 };
 
