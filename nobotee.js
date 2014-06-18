@@ -37,7 +37,7 @@ if (typeof(nobotee) == "undefined") {
 	};
 }
 
-nobotee.version = "0.01.6";
+nobotee.version = "0.01.7";
 
 // Redefine all nobotee functions, overwritting any code on reload..
 nobotee.start = function() {
@@ -195,7 +195,8 @@ nobotee.scr ={
 	},
 	gen_list: function(){
 		//TODO: automate this
-		var the_list = "public commands<br/>------<br/>*help<br/>*limit<br/>*theme<br/>*idle [username]<br/>*lastchatted [username]<br/>*points [username]<br/>*joindates<br/>*suggest [topic idea]<br/>*songlink<br/>(plus gdoc commands)<br/>------------<br/>bouncer+ commands<br/>------<br/>*togglelimit<br/>*toggleautovote<br/>*settheme<br/>*notheme<br/>*gdoc";
+		var gdoc_commands = nobotee.api.listcommands();
+		var the_list = "public commands<br/>------<br/>*help<br/>*limit<br/>*theme<br/>*idle [username]<br/>*lastchatted [username]<br/>*points [username]<br/>*joindates<br/>*suggest [topic idea]<br/>*songlink<br/>"+gdoc_commands+"------------<br/>bouncer+ commands<br/>------<br/>*togglelimit<br/>*toggleautovote<br/>*settheme<br/>*notheme<br/>*gdoc";
 		$( "#nbscr" ).html("<li class='nb_nt'>"+the_list+"</li>");
 	},
 	song_length: function(){
@@ -538,6 +539,19 @@ nobotee.api = {
 		} else {
 			var str = "that user does not appear to be here";
 		}	
+		return str;
+	},
+	listcommands: function(hats){
+		var obj = nobotee.commands;
+		var str = "";
+		for (var key in obj) {
+			if (hats){
+				if (obj.hasOwnProperty(key)) str += "*"+key+", ";
+			} else {
+				if (obj.hasOwnProperty(key)) str += "*"+key+"<br/>";
+			}
+		}
+		if (hats) str = str = str.substring(0, str.length - 2);
 		return str;
 	}
 };
