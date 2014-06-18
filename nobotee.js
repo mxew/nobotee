@@ -37,7 +37,7 @@ if (typeof(nobotee) == "undefined") {
 	};
 }
 
-nobotee.version = "0.01.5";
+nobotee.version = "0.01.6";
 
 // Redefine all nobotee functions, overwritting any code on reload..
 nobotee.start = function() {
@@ -449,7 +449,7 @@ nobotee.api = {
 			} else {
 				response += " hello.";
 			}
-			if (nobotee.advanced_settings.themeingreeting){
+			if (nobotee.advanced_settings.themeingreeting && nobotee.theme){
 				response += " Current theme is "+nobotee.theme;
 			}
 			setTimeout(function() {
