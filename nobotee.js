@@ -12,6 +12,7 @@ if (typeof(nobotee) == "undefined") {
 		media: null,
 		dj: null,
 		commands: {},
+		escortme:{},
 		theme: null,
 		skiptime:false,
 		defaults:{
@@ -37,7 +38,7 @@ if (typeof(nobotee) == "undefined") {
 	};
 }
 
-nobotee.version = "0.01.7";
+nobotee.version = "0.01.8";
 
 // Redefine all nobotee functions, overwritting any code on reload..
 nobotee.start = function() {
@@ -196,7 +197,7 @@ nobotee.scr ={
 	gen_list: function(){
 		//TODO: automate this
 		var gdoc_commands = nobotee.api.listcommands();
-		var the_list = "public commands<br/>------<br/>*help<br/>*limit<br/>*theme<br/>*idle [username]<br/>*lastchatted [username]<br/>*points [username]<br/>*joindates<br/>*suggest [topic idea]<br/>*songlink<br/>"+gdoc_commands+"------------<br/>bouncer+ commands<br/>------<br/>*togglelimit<br/>*toggleautovote<br/>*settheme<br/>*notheme<br/>*gdoc";
+		var the_list = "public commands<br/>------<br/>*help<br/>*limit<br/>*theme<br/>*removemeafter [#]</br>*idle [username]<br/>*lastchatted [username]<br/>*points [username]<br/>*joindates<br/>*suggest [topic idea]<br/>*songlink<br/>"+gdoc_commands+"------------<br/>bouncer+ commands<br/>------<br/>*togglelimit<br/>*toggleautovote<br/>*settheme<br/>*notheme<br/>*gdoc";
 		$( "#nbscr" ).html("<li class='nb_nt'>"+the_list+"</li>");
 	},
 	song_length: function(){
@@ -284,6 +285,7 @@ nobotee.api = {
 		API.on(API.USER_LEAVE, nobotee.api.newexit);
 		API.on(API.VOTE_UPDATE, nobotee.api.newvote);
 		API.on(API.CURATE_UPDATE, nobotee.api.newheart);
+		API.on(API.WAIT_LIST_UPDATE, nobotee.api.waitlistupdate);
 		nobotee.scr.init();
 	},
 	populate_media: function(){
@@ -295,6 +297,15 @@ nobotee.api = {
 	},
 	woot: function(){
 		$("#woot").click();
+	},
+	waitlistupdate: function(users){
+		var obj = nobotee.escortme;
+		for (var key in obj) {
+			if (obj.hasOwnProperty(key)){
+				var isdjing = nobotee.api.isdjing(key);
+				if (!isdjing) delete nobotee.escortme[key];
+			}
+		}
 	},
 	newchat: function(data){
 		var name = data.from;
@@ -325,6 +336,44 @@ nobotee.api = {
 				}
 			} else if (command == "songlink"){
 				nobotee.api.song_link(name);
+			} else if (command == "removemeafter"){
+				var isdjing = nobotee.api.isdjing(id);
+				if (isdjing){
+					if (id == nobotee.dj.id){
+						var playcount = 1;
+					} else {
+						var playcount = 0;
+					}
+					if (args){
+						var goal = parseInt(args);
+						nobotee.escortme[id] = {
+							name: name,
+							plays: playcount,
+							goal: goal
+						};
+					} else {
+						nobotee.escortme[id] = {
+							name: name,
+							plays: playcount,
+							goal: 1
+						};
+					}
+
+					if (playcount == 1 && nobotee.escortme[id].goal == 1){
+						nobotee.talk(nobotee.atmessage(name)+" i'll take you down after this song.");
+					} else {
+						nobotee.talk(nobotee.atmessage(name)+" i'll take you down after "+nobotee.escortme[id].goal+" plays");
+					}
+				} else {
+					nobotee.talk(nobotee.atmessage(name)+" you aren't even djing");
+				}
+			} else if (command == "dontremoveme"){
+				if (nobotee.escortme[id]){
+					delete nobotee.escortme[id];
+					nobotee.talk(nobotee.atmessage(name)+" ok I won't.");
+				} else {
+					nobotee.talk(nobotee.atmessage(name)+" I didn't plan on it");
+				}
 			} else if (command == "joindates"){
 				var oldest = nobotee.api.oldest_account();
 				nobotee.talk(oldest.guy.username+" is the oldest with a joindate of "+oldest.date);
@@ -406,6 +455,7 @@ nobotee.api = {
 
 	},
 	newsong: function(data){
+		var prevdj = nobotee.dj;
 		nobotee.media = data.media;
 		nobotee.dj = data.dj;
 		nobotee.firetrucks = {};
@@ -413,6 +463,19 @@ nobotee.api = {
 		if (nobotee.defaults.autovt){
 			nobotee.api.woot();
 		}
+
+		if (nobotee.escortme[prevdj.id]){
+			if (nobotee.escortme[prevdj.id].plays >= nobotee.escortme[prevdj.id].goal){
+				API.moderateRemoveDJ(prevdj.id);
+				nobotee.scr.updt(prevdj.username+" was escorted upon request after playing "+nobotee.escortme[prevdj.id].plays+" songs",1);
+				delete nobotee.escortme[prevdj.id];
+			}
+		}
+
+		if (nobotee.escortme[data.dj.id]){
+			nobotee.escortme[data.dj.id].plays++;
+		}
+
 		if (nobotee.advanced_settings.new_song_msg){
 			nobotee.talk("/me :cd: "+nobotee.dj.username+" started playing '"+nobotee.media.title+"' by "+nobotee.media.author);
 		}
@@ -527,6 +590,16 @@ nobotee.api = {
 			date: formatted_joindate
 		};
 		return obj;
+	},
+	isdjing: function(id){
+		var thewaitlist = API.getWaitList();
+		var isdjing = false;
+		var i;
+		for (i = 0; i < thewaitlist.length; ++i) {
+			if (id == thewaitlist[i].id) isdjing = true;
+		}
+		if (id == nobotee.dj.id) isdjing = true;
+		return isdjing;
 	},
 	pointslook: function(username){
 		var usr = nobotee.getobj(username);
