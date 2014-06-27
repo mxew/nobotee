@@ -299,13 +299,7 @@ nobotee.api = {
 		$("#woot").click();
 	},
 	waitlistupdate: function(users){
-		var obj = nobotee.escortme;
-		for (var key in obj) {
-			if (obj.hasOwnProperty(key)){
-				var isdjing = nobotee.api.isdjing(key);
-				if (!isdjing) delete nobotee.escortme[key];
-			}
-		}
+		//
 	},
 	newchat: function(data){
 		var name = data.from;
@@ -334,6 +328,16 @@ nobotee.api = {
 				} else {
 					nobotee.talk("there is no theme at the moment");
 				}
+			} else if (command == "img"){ 
+				if (args){
+					nobotee.api.get_img(args,name);
+				}
+			} else if (command == "weather"){
+			 	if (args){
+			 		nobotee.api.weather(args,name);
+			 	} else {
+			 		nobotee.api.weather("50010",name);
+			 	}
 			} else if (command == "songlink"){
 				nobotee.api.song_link(name);
 			} else if (command == "removemeafter"){
@@ -455,52 +459,56 @@ nobotee.api = {
 
 	},
 	newsong: function(data){
-		var prevdj = nobotee.dj;
-		nobotee.media = data.media;
-		nobotee.dj = data.dj;
-		nobotee.firetrucks = {};
-		nobotee.skiptime = false;
-		if (nobotee.defaults.autovt){
-			nobotee.api.woot();
-		}
-
-		if (nobotee.escortme[prevdj.id]){
-			if (nobotee.escortme[prevdj.id].plays >= nobotee.escortme[prevdj.id].goal){
-				API.moderateRemoveDJ(prevdj.id);
-				nobotee.scr.updt(prevdj.username+" was escorted upon request after playing "+nobotee.escortme[prevdj.id].plays+" songs",1);
-				delete nobotee.escortme[prevdj.id];
+		if (data.media){
+			if (nobotee.dj) var prevdj = nobotee.dj;
+			nobotee.media = data.media;
+			nobotee.dj = data.dj;
+			nobotee.firetrucks = {};
+			nobotee.skiptime = false;
+			if (nobotee.defaults.autovt){
+				nobotee.api.woot();
 			}
-		}
 
-		if (nobotee.escortme[data.dj.id]){
-			nobotee.escortme[data.dj.id].plays++;
-		}
+			if (prevdj){
+				if (nobotee.escortme[prevdj.id]){
+					if (nobotee.escortme[prevdj.id].plays >= nobotee.escortme[prevdj.id].goal){
+						API.moderateRemoveDJ(prevdj.id);
+						nobotee.scr.updt(prevdj.username+" was escorted upon request after playing "+nobotee.escortme[prevdj.id].plays+" songs",1);
+						delete nobotee.escortme[prevdj.id];
+					}
+				}
+			}
 
-		if (nobotee.advanced_settings.new_song_msg){
-			nobotee.talk("/me :cd: "+nobotee.dj.username+" started playing '"+nobotee.media.title+"' by "+nobotee.media.author);
-		}
-		if (nobotee.defaults.mode == "song_length") nobotee.scr.song_length();
-		if (nobotee.defaults.time_lmt){
-			var length = data.media.duration;
-			var dj = data.dj.username;
-			var song = data.media.title;
-			if (length > 320) {
-			 	nobotee.talk(nobotee.atmessage(dj)+", your song is wayy too long. Please skip.");
-			 	nobotee.skiptime = true;
-			 	setTimeout(function () {
-     				if (nobotee.skiptime == true) {
-      					 API.moderateForceSkip();
-      					 nobotee.scr.updt(dj+" played '"+song+"' and was skipped due to song time limit.",1);
-    				 }
-   				}, 5000);
-			} else if ((length > 183) && (length <= 320)) {
-				nobotee.talk(nobotee.atmessage(dj)+", TOO LONG!");
-			} else if ((length > 120) && (length <= 183)) {
-				//
-			} else if ((length > 60) && (length <= 120)) {
-			   //
-			} else if (length <= 60) {
-				nobotee.talk(nobotee.atmessage(dj)+", BONUS :sparkles:");
+			if (nobotee.escortme[data.dj.id]){
+				nobotee.escortme[data.dj.id].plays++;
+			}
+
+			if (nobotee.advanced_settings.new_song_msg){
+				nobotee.talk("/me :cd: "+nobotee.dj.username+" started playing '"+nobotee.media.title+"' by "+nobotee.media.author);
+				}
+			if (nobotee.defaults.mode == "song_length") nobotee.scr.song_length();
+			if (nobotee.defaults.time_lmt){
+				var length = data.media.duration;
+				var dj = data.dj.username;
+				var song = data.media.title;
+				if (length > 320) {
+				 	nobotee.talk(nobotee.atmessage(dj)+", your song is wayy too long. Please skip.");
+				 	nobotee.skiptime = true;
+				 	setTimeout(function () {
+     					if (nobotee.skiptime == true) {
+      						 API.moderateForceSkip();
+      						 nobotee.scr.updt(dj+" played '"+song+"' and was skipped due to song time limit.",1);
+    					 }
+   					}, 5000);
+				} else if ((length > 183) && (length <= 320)) {
+					nobotee.talk(nobotee.atmessage(dj)+", TOO LONG!");
+				} else if ((length > 120) && (length <= 183)) {
+					//
+				} else if ((length > 60) && (length <= 120)) {
+				   //
+				} else if (length <= 60) {
+					nobotee.talk(nobotee.atmessage(dj)+", BONUS :sparkles:");
+				}
 			}
 		}
 	},
@@ -557,6 +565,49 @@ nobotee.api = {
        		});
 		}
 
+	},
+	get_img: function(term,name){
+		$.ajax({
+           		dataType: "jsonp",
+           		type : "GET",
+            	url: "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&q="+encodeURIComponent(term)+"&jsoncallback=formatted", 
+            	success:  function (formatted){
+            		if (formatted.responseData.results.length){   
+				       nobotee.talk(nobotee.atmessage(name)+" "+formatted.responseData.results[0].unescapedUrl);
+    				} else {
+        				nobotee.talk(nobotee.atmessage(name)+" what is that?");
+      				}
+            	}
+       		});
+	},
+	weather: function(zip,name){
+		$.ajax({
+    	type : "GET",
+    	dataType : "jsonp",
+    	url : "http://query.yahooapis.com/v1/public/yql?q=use%20\'http%3A%2F%2Fgithub"
+            + ".com%2Fyql%2Fyql-tables%2Fraw%2Fmaster%2Fweather%2Fweather.bylocatio"
+            + "n.xml\'%20as%20we%3B%0Aselect%20*%20from%20we%20where%20location%3D"
+            + "%22" + encodeURIComponent(zip) + "%22%20and%20unit%3D\'f\'"
+            + "&format=json&diagnostics=false&jsoncallback=formatted",
+   			success: function(formatted){
+        	  try {
+                    var loc = formatted.query.results.weather.rss.channel.location.city + ", "
+                    if (formatted.query.results.weather.rss.channel.location.region != "") {
+                        loc += formatted.query.results.weather.rss.channel.location.region;
+                    } else {
+                        loc += formatted.query.results.weather.rss.channel.location.country;
+                    }
+                    var temp = formatted.query.results.weather.rss.channel.item.condition.temp;
+                    var cond = formatted.query.results.weather.rss.channel.item.condition.text;  
+                	if (cond.match(/rain/i)){ cond = "Raining on your parade";}
+                	if (temp < 30) { cond += " & GREAT! If you're a penguin";}
+                	if (temp > 100) { cond += " & :fire:";}
+                    nobotee.talk(nobotee.atmessage(name)+" "+loc + ": " + temp + "ºF & " + cond);
+                } catch(e) { 
+		           nobotee.talk(nobotee.atmessage(name)+" how about a valid zip code?");
+      		    }
+     		}
+		});
 	},
 	firetruck: function(id){
 		console.log("fired");
