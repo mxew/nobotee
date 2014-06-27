@@ -38,7 +38,7 @@ if (typeof(nobotee) == "undefined") {
 	};
 }
 
-nobotee.version = "0.01.8";
+nobotee.version = "0.01.9";
 
 // Redefine all nobotee functions, overwritting any code on reload..
 nobotee.start = function() {
@@ -197,7 +197,7 @@ nobotee.scr ={
 	gen_list: function(){
 		//TODO: automate this
 		var gdoc_commands = nobotee.api.listcommands();
-		var the_list = "public commands<br/>------<br/>*help<br/>*limit<br/>*theme<br/>*removemeafter [#]</br>*idle [username]<br/>*lastchatted [username]<br/>*points [username]<br/>*joindates<br/>*suggest [topic idea]<br/>*songlink<br/>"+gdoc_commands+"------------<br/>bouncer+ commands<br/>------<br/>*togglelimit<br/>*toggleautovote<br/>*settheme<br/>*notheme<br/>*gdoc";
+		var the_list = "public commands<br/>------<br/>*help<br/>*weather [zipcode]<br/>*img [something]<br/>*limit<br/>*theme<br/>*removemeafter [#]</br>*idle [username]<br/>*lastchatted [username]<br/>*points [username]<br/>*joindates<br/>*suggest [topic idea]<br/>*songlink<br/>"+gdoc_commands+"------------<br/>bouncer+ commands<br/>------<br/>*togglelimit<br/>*toggleautovote<br/>*settheme<br/>*notheme<br/>*gdoc";
 		$( "#nbscr" ).html("<li class='nb_nt'>"+the_list+"</li>");
 	},
 	song_length: function(){
