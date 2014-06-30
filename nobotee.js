@@ -13,6 +13,10 @@ if (typeof(nobotee) == "undefined") {
 		dj: null,
 		commands: {},
 		escortme:{},
+		entered: null,
+		reloadURL: "http://www.mxew.org/plugdj/nobotee.js",
+		lastSeen: {},
+		lastchatted: {},
 		theme: null,
 		skiptime:false,
 		defaults:{
@@ -21,6 +25,7 @@ if (typeof(nobotee) == "undefined") {
 			mode:"notifications",
 			cmmds:true
 		},
+		reloaded: false,
 		advanced_settings:{
 			greetings: false,
 			customgreeting: null,
@@ -36,9 +41,10 @@ if (typeof(nobotee) == "undefined") {
 		},
 		started:false
 	};
+	nobotee.entered = Date.now();
 }
 
-nobotee.version = "0.02.1";
+nobotee.version = "0.02.7";
 
 // Redefine all nobotee functions, overwritting any code on reload..
 nobotee.start = function() {
@@ -53,6 +59,10 @@ nobotee.init = function(){
 	var self = this;
 	self.ui.init();
 	self.api.init();
+	if (nobotee.reloaded){
+		nobotee.api.newversion();
+		nobotee.reloaded = false;
+	} 
 };
 
 nobotee.ui = {
@@ -295,13 +305,15 @@ nobotee.api = {
 		var dj1 = API.getDJ();
 		nobotee.media = media1;
 		nobotee.dj = dj1;
-		nobotee.timer.entered = Date.now();
 	},
 	woot: function(){
 		$("#woot").click();
 	},
 	waitlistupdate: function(users){
 		//
+	},
+	newversion: function(){
+		nobotee.talk("nobotee is now v"+nobotee.version);
 	},
 	newchat: function(data){
 		var name = data.from;
@@ -445,6 +457,16 @@ nobotee.api = {
 						nobotee.talk("the theme has been set to "+args);
 						nobotee.storage.save();
 					}
+				} else if (command == "reload"){
+					nobotee.reloaded = true;
+					nobotee.cleanUp();
+					setTimeout(function() {
+						var script=document.createElement('script');
+						script.id='nbtbot';
+						script.type='text/javascript';
+						script.src=nobotee.reloadURL;
+						document.body.appendChild(script);
+					}, 2 * 1000);
 				} else if (command == "notheme"){
 					nobotee.theme = null;
 					nobotee.talk("there is no theme");
@@ -719,35 +741,32 @@ nobotee.api = {
 };
 
 nobotee.timer = {
-	entered: null,
-	lastSeen: {},
-	lastChatted: {},
 	getTime : function (userId,chat) {
 		if (chat){
-			var last = nobotee.timer.lastChatted[userId];
+			var last = nobotee.lastchatted[userId];
 		} else {
-			var last = nobotee.timer.lastSeen[userId];
+			var last = nobotee.lastSeen[userId];
 		}
   		var age_ms = Date.now() - last;
   		var age_s = Math.floor(age_ms / 1000);
   		return age_s;
 	},
 	defaultTime: function (){
-		var last = nobotee.timer.entered;
+		var last = nobotee.entered;
 		var age_ms = Date.now() - last;
   		var age_s = Math.floor(age_ms / 1000);
   		return age_s;
 	},
 	justSaw : function (uid,chat) {
 		var rightNow = Date.now();
-  		nobotee.timer.lastSeen[uid] = rightNow;
-  		if (chat) nobotee.timer.lastChatted[uid] = rightNow;
+  		nobotee.lastSeen[uid] = rightNow;
+  		if (chat) nobotee.lastchatted[uid] = rightNow;
 	},
 	idleCheck: function(username,chat){
 		var id = nobotee.getid(username);
 		if (id){
 			if (chat){
-				if (nobotee.timer.lastChatted[id]){
+				if (nobotee.lastchatted[id]){
 					var scnds = nobotee.timer.getTime(id,true);
 					var aprox = "";
 				} else {
@@ -755,7 +774,7 @@ nobotee.timer = {
 					var aprox = "> ";
 				}
 			} else {
-				if (nobotee.timer.lastSeen[id]){
+				if (nobotee.lastSeen[id]){
 					var scnds = nobotee.timer.getTime(id);
 					var aprox = "";
 				} else {
@@ -772,7 +791,7 @@ nobotee.timer = {
 	djCheck: function(chat){
 		var id = nobotee.dj.id;
 		if(chat){
-			if (nobotee.timer.lastChatted[id]){
+			if (nobotee.lastchatted[id]){
 				var scnds = nobotee.timer.getTime(id,true);
 				var aprox = "";
 			} else {
@@ -780,7 +799,7 @@ nobotee.timer = {
 				var aprox = "> ";
 			}
 		} else {
-			if (nobotee.timer.lastSeen[id]){
+			if (nobotee.lastSeen[id]){
 				var scnds = nobotee.timer.getTime(id);
 				var aprox = "";
 			} else {
@@ -917,7 +936,7 @@ nobotee.cleanUp = function(){
 	API.off(API.WAIT_LIST_UPDATE, nobotee.api.waitlistupdate);
 	nobotee.ui.destroy();
 	$("#nbtbot").remove();
-	nobotee = undefined;
+	nobotee.started = false;
 };
 
 nobotee.storage = {
