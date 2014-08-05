@@ -11,6 +11,7 @@ if (typeof(nobotee) == "undefined") {
 		firetrucks: {},
 		media: null,
 		dj: null,
+		imgblacklist: {},
 		commands: {},
 		escortme:{},
 		entered: null,
@@ -44,7 +45,7 @@ if (typeof(nobotee) == "undefined") {
 	nobotee.entered = Date.now();
 }
 
-nobotee.version = "0.02.7";
+nobotee.version = "0.03.0";
 
 // Redefine all nobotee functions, overwritting any code on reload..
 nobotee.start = function() {
@@ -77,7 +78,7 @@ nobotee.ui = {
 		$( "body" ).prepend("<style id='nbtstyles'>.cutelink1{text-decoration:underline; color:#888;} .cutelink1:hover{color:#000;} .newsetting{padding:5px 0 5px 0;} #customgdocbox{width:350px;} #customgreetingbox{width:350px;} .newsetting2{padding:10px 0 10px 0;} .nbtset_divide{display:block; width:100%; border-bottom:1px solid #ccc; margin-top:15px; margin-bottom:15px;} #thesettingsnbt{display:none;} .dogcat{overflow-y:scroll; height:300px;background-color:#fff; padding:15px 5px 10px 5px;} .nbtclosethat{float:right; color:#fff; text-decoration:none; font-weight:400;} .nbtclosethat:hover{color:green;} .catdog{padding:10px 5px 10px 5px; background-color:#333; color:#fff; font-size:14px; font-weight:bold;} div.nbtsettings{font-family:helvetica,arial,sans-serif;-webkit-text-rendering: optimizeLegibility; display:block; position:absolute; top:50%; left:50%; font-size:12px; width:500px; padding: 0; color:#000; -webkit-transform: translate(-50%, -50%); -moz-transform: translate(-50%, -50%); -ms-transform: translate(-50%, -50%); -o-transform: translate(-50%, -50%);transform: translate(-50%, -50%);}ul.nbscr{margin:0; padding:0; list-style-type:none;} .nb_on{color:green;} .nb_off{color:red;} .nb_btnrow{border-top:1px dotted #ccc; margin-top:8px; padding-top:8px;} .nb_btnrow:first-child{padding-top:0;border-top:none;} #nbsc_mode{color:#888;} li.nb_nt{padding:2px;} li.nb_nt:nth-child(even){background-color:#000073;} #nb_buttons{padding-left:2px; padding-right:2px;} #nb_screen{height:70px; border-bottom:1px solid #00f; background-color:#00f; color:#eee; overflow-y:scroll;} #nobotee h2{padding-left:2px;font-size:12px; color:#fff; display:block; background-color:#444; margin:0; font-weight:700;} #nobotee{z-index:9; font-family:helvetica,arial,sans-serif; left:2px; font-size:12px;height:232px; position:absolute; color:#000; top:55px; width:188px; background-color:#fff;}</style><div id='nobotee'></div>");
 		$( "#nobotee" ).append("<div id='nb_contents'><h2>nobotee "+nobotee.version+"</h2></div>");
 		$( "#nb_contents" ).append("<div id='nb_screen'><ul class='nbscr' id='nbscr'></ul></div>");
-	
+
 		if (nobotee.defaults.time_lmt){
 			var t_limit = "<span class='nb_on' id='nbsc_tmlmt'>on</span>";
 		} else {
@@ -209,7 +210,7 @@ nobotee.scr ={
 	gen_list: function(){
 		//TODO: automate this
 		var gdoc_commands = nobotee.api.listcommands();
-		var the_list = "public commands<br/>------<br/>*help<br/>*define [word]<br/>*example [word]<br/>*weather [zipcode]<br/>*img [something]<br/>*limit<br/>*theme<br/>*removemeafter [#]</br>*idle [username]<br/>*lastchatted [username]<br/>*points [username]<br/>*joindates<br/>*suggest [topic idea]<br/>*songlink<br/>"+gdoc_commands+"------------<br/>bouncer+ commands<br/>------<br/>*togglelimit<br/>*toggleautovote<br/>*settheme<br/>*notheme<br/>*gdoc";
+		var the_list = "public commands<br/>------<br/>*help<br/>*define [word]<br/>*example [word]<br/>*img [something]<br/>*limit<br/>*theme<br/>*removemeafter [#]</br>*idle [username]<br/>*lastchatted [username]<br/>*points [username]<br/>*joindates<br/>*suggest [topic idea]<br/>*songlink<br/>"+gdoc_commands+"------------<br/>bouncer+ commands<br/>------<br/>*togglelimit<br/>*toggleautovote<br/>*settheme<br/>*notheme<br/>*gdoc";
 		$( "#nbscr" ).html("<li class='nb_nt'>"+the_list+"</li>");
 	},
 	song_length: function(){
@@ -344,7 +345,7 @@ nobotee.api = {
 				}
 			} else if (command == "img"){ 
 				if (args){
-					nobotee.api.get_img(args,name);
+					if (!nobotee.imgblacklist[id]) nobotee.api.get_img(args,name);
 				}
 			} else if (command == "define"){
 				if (args){
@@ -354,12 +355,6 @@ nobotee.api = {
 				if (args){
 					nobotee.api.example(args);
 				}
-			} else if (command == "weather"){
-			 	if (args){
-			 		nobotee.api.weather(args,name);
-			 	} else {
-			 		nobotee.api.weather("50010",name);
-			 	}
 			} else if (command == "songlink"){
 				nobotee.api.song_link(name);
 			} else if (command == "removemeafter"){
@@ -456,6 +451,38 @@ nobotee.api = {
 						nobotee.theme = args;
 						nobotee.talk("the theme has been set to "+args);
 						nobotee.storage.save();
+					}
+				}  else if (command == "noimg"){
+					if (args){
+						var theid = nobotee.getid(args);
+						if (theid){
+							if (nobotee.imgblacklist[theid]){
+								nobotee.talk(args+" is already blacklisted from the img command");
+							} else {
+								nobotee.imgblacklist[theid] = 1;
+								nobotee.storage.save();
+								nobotee.talk(args+" can't use the img command anymore.")
+							}
+						} else {
+							nobotee.talk("who is that");
+						}
+					}
+				} else if (command == "nonoimg"){
+					if (args){
+						var theid = nobotee.getid(args);
+						if (theid){
+							if (nobotee.imgblacklist[theid]){
+								delete nobotee.imgblacklist[theid];
+								nobotee.storage.save();
+								nobotee.talk(args+" can use the img command again");
+							} else {
+								nobotee.imgblacklist[theid] = args;
+								nobotee.storage.save();
+								nobotee.talk(args+" can already use the img command");
+							}
+						} else {
+							nobotee.talk("who is that");
+						}
 					}
 				} else if (command == "reload"){
 					nobotee.reloaded = true;
@@ -605,41 +632,14 @@ nobotee.api = {
             	url: "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&q="+encodeURIComponent(term)+"&jsoncallback=formatted", 
             	success:  function (formatted){
             		if (formatted.responseData.results.length){   
-				       nobotee.talk(nobotee.atmessage(name)+" "+formatted.responseData.results[0].unescapedUrl);
+            			var alltheimages = formatted.responseData.results;
+            			var theimage = alltheimages[Math.floor(Math.random() * (alltheimages.length))];
+				       nobotee.talk(nobotee.atmessage(name)+" "+theimage.unescapedUrl);
     				} else {
         				nobotee.talk(nobotee.atmessage(name)+" what is that?");
       				}
             	}
        		});
-	},
-	weather: function(zip,name){
-		$.ajax({
-    	type : "GET",
-    	dataType : "jsonp",
-    	url : "http://query.yahooapis.com/v1/public/yql?q=use%20\'http%3A%2F%2Fgithub"
-            + ".com%2Fyql%2Fyql-tables%2Fraw%2Fmaster%2Fweather%2Fweather.bylocatio"
-            + "n.xml\'%20as%20we%3B%0Aselect%20*%20from%20we%20where%20location%3D"
-            + "%22" + encodeURIComponent(zip) + "%22%20and%20unit%3D\'f\'"
-            + "&format=json&diagnostics=false&jsoncallback=formatted",
-   			success: function(formatted){
-        	  try {
-                    var loc = formatted.query.results.weather.rss.channel.location.city + ", "
-                    if (formatted.query.results.weather.rss.channel.location.region != "") {
-                        loc += formatted.query.results.weather.rss.channel.location.region;
-                    } else {
-                        loc += formatted.query.results.weather.rss.channel.location.country;
-                    }
-                    var temp = formatted.query.results.weather.rss.channel.item.condition.temp;
-                    var cond = formatted.query.results.weather.rss.channel.item.condition.text;  
-                	if (cond.match(/rain/i)){ cond = "Raining on your parade";}
-                	if (temp < 30) { cond += " & GREAT! If you're a penguin";}
-                	if (temp > 100) { cond += " & :fire:";}
-                    nobotee.talk(nobotee.atmessage(name)+" "+loc + ": " + temp + "ºF & " + cond);
-                } catch(e) { 
-		           nobotee.talk(nobotee.atmessage(name)+" how about a valid zip code?");
-      		    }
-     		}
-		});
 	},
 	define: function(word){
 		$.ajax({
@@ -943,6 +943,7 @@ nobotee.storage = {
 	save: function(){
 		var save_file = {
 			defaults: nobotee.defaults,
+			imgblacklist: nobotee.imgblacklist,
 			theme: nobotee.theme,
 			advanced_settings: nobotee.advanced_settings
 		};
@@ -957,6 +958,7 @@ nobotee.storage = {
  		 var preferences = JSON.parse(favorite);
  		 nobotee.defaults = preferences.defaults;
  		 nobotee.theme = preferences.theme;
+ 		 if (preferences.imgblacklist) nobotee.imgblacklist = preferences.imgblacklist;
  		 if (preferences.advanced_settings) nobotee.advanced_settings = preferences.advanced_settings;
 	}
 };
