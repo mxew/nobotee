@@ -1,1 +1,1 @@
-javascript:(function(){if($('#nbtbot').length){nobotee.cleanUp()}else{var script=document.createElement('script');script.id='nbtbot';script.type='text/javascript';script.src='http://mxew.org/plugdj/nobotee.js';document.body.appendChild(script);}})();
+javascript:(function(){if($('#nbtbot').length){nobotee.cleanUp()}else{var script=document.createElement('script');script.id='nbtbot';script.type='text/javascript';script.src='https://854.github.io/plugdj/nobotee.js';document.body.appendChild(script);}})();
