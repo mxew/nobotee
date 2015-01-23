@@ -14,8 +14,9 @@ if (typeof(nobotee) == "undefined") {
 		imgblacklist: {},
 		commands: {},
 		escortme:{},
+		people:{},
 		entered: null,
-		reloadURL: "http://www.mxew.org/plugdj/nobotee.js",
+		reloadURL: "https://854.github.io/plugdj/nobotee.js",
 		lastSeen: {},
 		lastchatted: {},
 		theme: null,
@@ -45,7 +46,7 @@ if (typeof(nobotee) == "undefined") {
 	nobotee.entered = Date.now();
 }
 
-nobotee.version = "0.03.0";
+nobotee.version = "0.05.2";
 
 // Redefine all nobotee functions, overwritting any code on reload..
 nobotee.start = function() {
@@ -75,7 +76,7 @@ nobotee.ui = {
 		 }
 	},
 	build: function(){
-		$( "body" ).prepend("<style id='nbtstyles'>.cutelink1{text-decoration:underline; color:#888;} .cutelink1:hover{color:#000;} .newsetting{padding:5px 0 5px 0;} #customgdocbox{width:350px;} #customgreetingbox{width:350px;} .newsetting2{padding:10px 0 10px 0;} .nbtset_divide{display:block; width:100%; border-bottom:1px solid #ccc; margin-top:15px; margin-bottom:15px;} #thesettingsnbt{display:none;} .dogcat{overflow-y:scroll; height:300px;background-color:#fff; padding:15px 5px 10px 5px;} .nbtclosethat{float:right; color:#fff; text-decoration:none; font-weight:400;} .nbtclosethat:hover{color:green;} .catdog{padding:10px 5px 10px 5px; background-color:#333; color:#fff; font-size:14px; font-weight:bold;} div.nbtsettings{font-family:helvetica,arial,sans-serif;-webkit-text-rendering: optimizeLegibility; display:block; position:absolute; top:50%; left:50%; font-size:12px; width:500px; padding: 0; color:#000; -webkit-transform: translate(-50%, -50%); -moz-transform: translate(-50%, -50%); -ms-transform: translate(-50%, -50%); -o-transform: translate(-50%, -50%);transform: translate(-50%, -50%);}ul.nbscr{margin:0; padding:0; list-style-type:none;} .nb_on{color:green;} .nb_off{color:red;} .nb_btnrow{border-top:1px dotted #ccc; margin-top:8px; padding-top:8px;} .nb_btnrow:first-child{padding-top:0;border-top:none;} #nbsc_mode{color:#888;} li.nb_nt{padding:2px;} li.nb_nt:nth-child(even){background-color:#000073;} #nb_buttons{padding-left:2px; padding-right:2px;} #nb_screen{height:70px; border-bottom:1px solid #00f; background-color:#00f; color:#eee; overflow-y:scroll;} #nobotee h2{padding-left:2px;font-size:12px; color:#fff; display:block; background-color:#444; margin:0; font-weight:700;} #nobotee{z-index:9; font-family:helvetica,arial,sans-serif; left:2px; font-size:12px;height:232px; position:absolute; color:#000; top:55px; width:188px; background-color:#fff;}</style><div id='nobotee'></div>");
+		$( "body" ).prepend("<style id='nbtstyles'>.cutelink1{text-decoration:underline; color:#888;} .cutelink1:hover{color:#000;} .newsetting{padding:5px 0 5px 0;} #customgdocbox{width:350px;} #customgreetingbox{width:350px;} .newsetting2{padding:10px 0 10px 0;} .nbtset_divide{display:block; width:100%; border-bottom:1px solid #ccc; margin-top:15px; margin-bottom:15px;} #thesettingsnbt{display:none;} .dogcat{overflow-y:scroll; height:300px;background-color:#fff; padding:15px 5px 10px 5px;} .nbtclosethat{float:right; color:#fff; text-decoration:none; font-weight:400;} .nbtclosethat:hover{color:green;} .catdog{padding:10px 5px 10px 5px; background-color:#333; color:#fff; font-size:14px; font-weight:bold;} div.nbtsettings{font-family:helvetica,arial,sans-serif;-webkit-text-rendering: optimizeLegibility; display:inline-block; box-sizing:border-box; margin-right:-.25em;height:100%;content:'';vertical-align:middle; font-size:12px; width:500px; padding: 0; color:#000; }ul.nbscr{margin:0; padding:0; list-style-type:none;} .nb_on{color:green;} .nb_off{color:red;} .nb_btnrow{border-top:1px dotted #ccc; margin-top:8px; padding-top:8px;} .nb_btnrow:first-child{padding-top:0;border-top:none;} #nbsc_mode{color:#888;} li.nb_nt{padding:2px;} li.nb_nt:nth-child(even){background-color:#000073;} #nb_buttons{padding-left:2px; padding-right:2px;} #nb_screen{height:70px; border-bottom:1px solid #00f; background-color:#00f; color:#eee; overflow-y:scroll;} #nobotee h2{padding-left:2px;font-size:12px; color:#fff; display:block; background-color:#444; margin:0; font-weight:700;} #nobotee{z-index:9; font-family:helvetica,arial,sans-serif; left:2px; font-size:12px;height:232px; position:absolute; color:#000; top:55px; width:188px; background-color:#fff;}</style><div id='nobotee'></div>");
 		$( "#nobotee" ).append("<div id='nb_contents'><h2>nobotee "+nobotee.version+"</h2></div>");
 		$( "#nb_contents" ).append("<div id='nb_screen'><ul class='nbscr' id='nbscr'></ul></div>");
 
@@ -99,7 +100,7 @@ nobotee.ui = {
 			+a_vote+"</div> <div class='nb_btnrow'><button onclick='nobotee.buttons.toggle_cmmnds()'>chat commands</button> "
 			+c_mnds+"</div><div class='nb_btnrow'><a class='cutelink1' onclick='nobotee.buttons.open_settings()'>advanced settings</a></div></div>");
 		console.log("nobotee ui built");
-		$( "body" ).append("<div id='thesettingsnbt'><div style='width:100%; height:100%;' id='dialog-container'><div class='modal-background'></div><div class='nbtsettings'><div class='catdog'>nobotee settings<a onclick='nobotee.buttons.close_settings()' class='nbtclosethat'>[close + save]</a><div style='clear:both;'></div></div><div class='dogcat'>fetching the settings...</div></div></div></div>");
+		$( "body" ).append("<div id='thesettingsnbt'><div style='display: block;' class='is-preview' id='dialog-container'>::before<div class='nbtsettings'><div class='catdog'>nobotee settings<a onclick='nobotee.buttons.close_settings()' class='nbtclosethat'>[close + save]</a><div style='clear:both;'></div></div><div class='dogcat'>fetching the settings...</div></div></div></div>");
 	},
 	loadsettings: function(){
 		$( ".dogcat" ).html("<div class='newsetting'><input type='checkbox' id='greetonentry'> greet new user on entry</div><div class='newsetting'><input type='checkbox' id='greettheme'> include theme in greeting (if there is one)</div><div class='newsetting2'>custom greeting: <input name='customgreeting' placeholder='(will automatically be prefixed with @username)' id='customgreetingbox' type='text'/></div>");
@@ -210,7 +211,7 @@ nobotee.scr ={
 	gen_list: function(){
 		//TODO: automate this
 		var gdoc_commands = nobotee.api.listcommands();
-		var the_list = "public commands<br/>------<br/>*help<br/>*define [word]<br/>*example [word]<br/>*img [something]<br/>*limit<br/>*theme<br/>*removemeafter [#]</br>*idle [username]<br/>*lastchatted [username]<br/>*points [username]<br/>*joindates<br/>*suggest [topic idea]<br/>*songlink<br/>"+gdoc_commands+"------------<br/>bouncer+ commands<br/>------<br/>*togglelimit<br/>*toggleautovote<br/>*settheme<br/>*notheme<br/>*gdoc";
+		var the_list = "public commands<br/>------<br/>*help<br/>*img [something]<br/>*limit<br/>*theme<br/>*removemeafter [#]</br>*idle [username]<br/>*lastchatted [username]<br/>*points [username]<br/>*joindates<br/>*suggest [topic idea]<br/>*songlink<br/>"+gdoc_commands+"------------<br/>bouncer+ commands<br/>------<br/>*togglelimit<br/>*toggleautovote<br/>*settheme<br/>*notheme<br/>*gdoc";
 		$( "#nbscr" ).html("<li class='nb_nt'>"+the_list+"</li>");
 	},
 	song_length: function(){
@@ -293,11 +294,11 @@ nobotee.api = {
 		nobotee.api.populate_media();
 		if (nobotee.advanced_settings.custom_gdoc) nobotee.commands = nobotee.api.get_commands();
 		API.on(API.CHAT, nobotee.api.newchat);
-		API.on(API.DJ_ADVANCE, nobotee.api.newsong);
+		API.on(API.ADVANCE, nobotee.api.newsong);
 		API.on(API.USER_JOIN, nobotee.api.newuser);
 		API.on(API.USER_LEAVE, nobotee.api.newexit);
 		API.on(API.VOTE_UPDATE, nobotee.api.newvote);
-		API.on(API.CURATE_UPDATE, nobotee.api.newheart);
+		API.on(API.GRAB_UPDATE, nobotee.api.newheart);
 		API.on(API.WAIT_LIST_UPDATE, nobotee.api.waitlistupdate);
 		nobotee.scr.init();
 	},
@@ -317,8 +318,9 @@ nobotee.api = {
 		nobotee.talk("nobotee is now v"+nobotee.version);
 	},
 	newchat: function(data){
-		var name = data.from;
-		var id = data.fromID;
+		console.log(data);
+		var name = data.un;
+		var id = data.uid;
 		var msg = data.message;
 		var lan = data.language;
 		nobotee.timer.justSaw(id,true);
@@ -330,6 +332,45 @@ nobotee.api = {
 				nobotee.talk(nobotee.commands[command]);
 			} else if (command == "help"){
 				nobotee.talk("help");
+			} else if (command == "stats"){
+				if (args){
+					var dudebro = nobotee.getid(args);
+					if (dudebro){
+						if (nobotee.people[dudebro]){
+							var average = nobotee.people[dudebro].t / nobotee.people[dudebro].p;
+
+         					 var hours = Math.floor(average / (60 * 60));
+
+        					 var divisor_for_minutes = average % (60 * 60);
+        					 var minutes = Math.floor(divisor_for_minutes / 60);
+
+         					var divisor_for_seconds = divisor_for_minutes % 60;
+         					var seconds = Math.ceil(divisor_for_seconds);
+         					var response = "(stats for "+ args+") average:"+minutes+"m "+seconds+"s | plays:"+nobotee.people[dudebro].p+" | bonuses:"+nobotee.people[dudebro].b+" | strikes:"+nobotee.people[dudebro].n;
+							nobotee.talk(response);
+						} else {
+							nobotee.talk(nobotee.atmessage(name)+" no stats on file for "+args+" yet");
+						}
+					} else {
+						nobotee.talk(nobotee.atmessage(name)+" nobody by that name here !~");
+					}
+				} else {
+					if (nobotee.people[id]){
+						var average = nobotee.people[id].t / nobotee.people[id].p;
+
+         				 var hours = Math.floor(average / (60 * 60));
+
+        				 var divisor_for_minutes = average % (60 * 60);
+        				 var minutes = Math.floor(divisor_for_minutes / 60);
+
+         				var divisor_for_seconds = divisor_for_minutes % 60;
+         				var seconds = Math.ceil(divisor_for_seconds);
+         				var response = "(stats for "+ name+") average:"+minutes+"m "+seconds+"s | plays:"+nobotee.people[id].p+" | bonuses:"+nobotee.people[id].b+" | strikes:"+nobotee.people[id].n;
+						nobotee.talk(response);
+					} else {
+						nobotee.talk(nobotee.atmessage(name)+" no stats on file for you yet");
+					}
+				}	
 			} else if (command == "points"){
 				if (args){
 					var response = nobotee.api.pointslook(args);
@@ -346,14 +387,6 @@ nobotee.api = {
 			} else if (command == "img"){ 
 				if (args){
 					if (!nobotee.imgblacklist[id]) nobotee.api.get_img(args,name);
-				}
-			} else if (command == "define"){
-				if (args){
-					nobotee.api.define(args);
-				}
-			} else if (command == "example"){
-				if (args){
-					nobotee.api.example(args);
 				}
 			} else if (command == "songlink"){
 				nobotee.api.song_link(name);
@@ -512,12 +545,13 @@ nobotee.api = {
 		//end of commands
 		} else if (msg == "1" && nobotee.themevote.active){
 			nobotee.themevote.params.votes[id] = 1;
-		} else if ((msg == ":fire:") && (nobotee.defaults.cmmds)){
+		} else if ((msg.match(/1f525/)) && (nobotee.defaults.cmmds)){
 			nobotee.api.firetruck(id);
 		}
 
 	},
 	newsong: function(data){
+		console.log(data);
 		if (data.media){
 			if (nobotee.dj) var prevdj = nobotee.dj;
 			nobotee.media = data.media;
@@ -545,12 +579,28 @@ nobotee.api = {
 			if (nobotee.advanced_settings.new_song_msg){
 				nobotee.talk("/me :cd: "+nobotee.dj.username+" started playing '"+nobotee.media.title+"' by "+nobotee.media.author);
 				}
+
+			if (nobotee.people[nobotee.dj.id]){
+				nobotee.people[nobotee.dj.id].p++;
+				nobotee.people[nobotee.dj.id].t = nobotee.people[nobotee.dj.id].t + data.media.duration;
+			} else {
+				nobotee.people[nobotee.dj.id] = {
+						p: 1,
+						t: data.media.duration,
+						b: 0,
+						n: 0
+				};
+			}
+		
+			nobotee.storage.save();
 			if (nobotee.defaults.mode == "song_length") nobotee.scr.song_length();
 			if (nobotee.defaults.time_lmt){
 				var length = data.media.duration;
 				var dj = data.dj.username;
 				var song = data.media.title;
 				if (length > 320) {
+					nobotee.people[nobotee.dj.id].n++;
+					nobotee.storage.save();
 				 	nobotee.talk(nobotee.atmessage(dj)+", your song is wayy too long. Please skip.");
 				 	nobotee.skiptime = true;
 				 	setTimeout(function () {
@@ -560,6 +610,8 @@ nobotee.api = {
     					 }
    					}, 5000);
 				} else if ((length > 183) && (length <= 320)) {
+					nobotee.people[nobotee.dj.id].n++;
+					nobotee.storage.save();
 					nobotee.talk(nobotee.atmessage(dj)+", TOO LONG!");
 				} else if ((length > 120) && (length <= 183)) {
 					//
@@ -567,6 +619,8 @@ nobotee.api = {
 				   //
 				} else if (length <= 60) {
 					nobotee.talk(nobotee.atmessage(dj)+", BONUS :sparkles:");
+					nobotee.people[nobotee.dj.id].b++;
+					nobotee.storage.save();
 				}
 			}
 		}
@@ -629,7 +683,7 @@ nobotee.api = {
 		$.ajax({
            		dataType: "jsonp",
            		type : "GET",
-            	url: "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&q="+encodeURIComponent(term)+"&jsoncallback=formatted", 
+            	url: "https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q="+encodeURIComponent(term)+"&jsoncallback=formatted", 
             	success:  function (formatted){
             		if (formatted.responseData.results.length){   
             			var alltheimages = formatted.responseData.results;
@@ -640,34 +694,6 @@ nobotee.api = {
       				}
             	}
        		});
-	},
-	define: function(word){
-		$.ajax({
-           	dataType: "jsonp",
-            type:"GET",
-            url: "http://api.urbandictionary.com/v0/define?term="+word, 
-            success:  function (response){
-            	if (response.list.length){
-               		nobotee.talk(response.list[0].definition);
-               	} else {
-               		nobotee.talk("no idea");
-               	}
-            }
-       	});
-	},
-	example: function(word){
-		$.ajax({
-           	dataType: "jsonp",
-            type:"GET",
-            url: "http://api.urbandictionary.com/v0/define?term="+word, 
-            success:  function (response){
-               	if (response.list.length){
-               		nobotee.talk(response.list[0].example);
-               	} else {
-               		nobotee.talk("no idea");
-               	}
-            }
-       	});
 	},
 	firetruck: function(id){
 		console.log("fired");
@@ -685,16 +711,16 @@ nobotee.api = {
 	oldest_account: function(){
 		var users = API.getUsers();
 		var oldest_guy = users[0];
-		var oldest_time = Date.parse(oldest_guy.dateJoined);
+		var oldest_time = Date.parse(oldest_guy.joined);
 		var i;
-		for (i = 0; i < users.length; ++i) {
-			var thetime = Date.parse(users[i].dateJoined);
+		for (i = 0; i < users.length; i++) {
+			var thetime = Date.parse(users[i].joined);
     		if (thetime < oldest_time){
     			oldest_time = thetime;
     			oldest_guy = users[i];
     		}
 		}
-		var d = new Date(oldest_guy.dateJoined);
+		var d = new Date(oldest_guy.joined);
 		var formatted_joindate = nobotee.formatdate(d, true);
 		var obj = {
 			guy: oldest_guy,
@@ -928,7 +954,7 @@ nobotee.themevote  = {
 
 nobotee.cleanUp = function(){
 	API.off(API.CHAT, nobotee.api.newchat);
-	API.off(API.DJ_ADVANCE, nobotee.api.newsong);
+	API.off(API.ADVANCE, nobotee.api.newsong);
 	API.off(API.USER_JOIN, nobotee.api.newuser);
 	API.off(API.USER_LEAVE, nobotee.api.newexit);
 	API.off(API.VOTE_UPDATE, nobotee.api.newvote);
@@ -945,6 +971,7 @@ nobotee.storage = {
 			defaults: nobotee.defaults,
 			imgblacklist: nobotee.imgblacklist,
 			theme: nobotee.theme,
+			users: nobotee.people,
 			advanced_settings: nobotee.advanced_settings
 		};
 		var preferences = JSON.stringify(save_file);
@@ -959,6 +986,7 @@ nobotee.storage = {
  		 nobotee.defaults = preferences.defaults;
  		 nobotee.theme = preferences.theme;
  		 if (preferences.imgblacklist) nobotee.imgblacklist = preferences.imgblacklist;
+ 		 if (preferences.users) nobotee.people = preferences.users;
  		 if (preferences.advanced_settings) nobotee.advanced_settings = preferences.advanced_settings;
 	}
 };
