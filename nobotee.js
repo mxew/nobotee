@@ -48,7 +48,7 @@ if (typeof(nobotee) == "undefined") {
 	nobotee.entered = Date.now();
 }
 
-nobotee.version = "0.06.5";
+nobotee.version = "0.06.6";
 
 // Redefine all nobotee functions, overwritting any code on reload..
 nobotee.start = function() {
